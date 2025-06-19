@@ -41,10 +41,11 @@ class VehicleRegister
 
 
 	/**
+	 * @param  scalar|null $vin
 	 * @return ?Vehicle
 	 * @throws RequestException
 	 */
-	public function findByVIN(string $vin): ?object
+	public function findByVIN(mixed $vin = null): ?object
 	{
 		return $this->request('GET', '/', [
 			'vin' => $vin,
