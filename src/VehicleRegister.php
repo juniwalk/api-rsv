@@ -8,10 +8,11 @@
 namespace JuniWalk\RSV;
 
 use GuzzleHttp\Client;
-use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\RequestException;
 use JuniWalk\RSV\Entity\Vehicle;
-use RuntimeException;
+use JuniWalk\RSV\Exceptions\ContentMalformedException;
+use JuniWalk\RSV\Exceptions\RequestFailedException;
+use JuniWalk\RSV\Exceptions\VehicleNotFoundException;
 
 /**
  * @link https://dataovozidlech.cz/wwwroot/data/RSV_Verejna_API_DK_v1_0.pdf
@@ -38,17 +39,15 @@ class VehicleRegister
 
 	/**
 	 * @param  scalar|null $vin
-	 * @throws RequestException
+	 * @throws ContentMalformedException
+	 * @throws RequestFailedException
+	 * @throws VehicleNotFoundException
 	 */
-	public function findByVIN(mixed $vin = null): ?Vehicle
+	public function findByVIN(mixed $vin = null): Vehicle
 	{
 		$data = $this->request('GET', '/', [
 			'vin' => $vin,
 		]);
-
-		if (empty($data)) {
-			return null;
-		}
 
 		return new Vehicle((array) $data);
 	}
@@ -56,12 +55,12 @@ class VehicleRegister
 
 	/**
 	 * @param  array<string, mixed> $query
-	 * @return ?object
-	 * @throws ConnectException
-	 * @throws RequestException
-	 * @throws RuntimeException
+	 * @return object
+	 * @throws ContentMalformedException
+	 * @throws RequestFailedException
+	 * @throws VehicleNotFoundException
 	 */
-	private function request(string $method, string $path, array $query = []): ?object
+	private function request(string $method, string $path, array $query = []): object
 	{
 		$path = trim($path, '/');
 
@@ -74,34 +73,35 @@ class VehicleRegister
 
 		} catch (RequestException $e) {
 			if (!$e->hasResponse()) {
-				throw $e;
+				throw new RequestFailedException(previous: $e);
 			}
 
 			$response = $e->getResponse();
 		}
 
-		if (!$result = $response?->getBody()->getContents()) {
-			throw new RuntimeException('Cannot read response body.');
+		if (!$content = $response?->getBody()->getContents()) {
+			throw new ContentMalformedException('Response body is empty.');
 		}
 
-		if (!$result = json_decode($result)) {
-			throw new RuntimeException('Cannot read response body.');
+		if (!$json = json_decode($content)) {
+			throw new ContentMalformedException('Unable to decode JSON.');
 		}
 
-		/** @var object $result */
+		/** @var object $json */
 
-		if (isset($result->Message)) {
-			// $result->Type === 2 // maximum request (27 in 60 seconds)
-			throw new RuntimeException($result->Message);
+		if (isset($json->Message)) {
+			// $json->Type === 2 // maximum request (27 in 60 seconds)
+			throw new RequestFailedException($json->Message);
 		}
 
-		/** @var object{Status: int, Data: ?object} $result */
+		/** @var object{Status: int, Data: object} $json */
 
-		if (!in_array($result->Status, [1, 3])) {
-			// 1 - OK, 3 - Not found
-			throw new RuntimeException('Request failed.');
-		}
+		return match ($json->Status) {
+			1 => $json->Data,
+			// 2 => ?
+			3 => throw new VehicleNotFoundException,
 
-		return $result->Data;
+			default => throw new RequestFailedException,
+		};
 	}
 }

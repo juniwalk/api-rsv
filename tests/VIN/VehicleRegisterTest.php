@@ -5,6 +5,7 @@
  * @license   MIT License
  */
 
+use JuniWalk\RSV\Exceptions\VehicleNotFoundException;
 use JuniWalk\RSV\VehicleRegister;
 use Tester\Assert;
 use Tester\TestCase;
@@ -17,32 +18,26 @@ require __DIR__.'/../bootstrap.php';
 final class VehicleRegisterTest extends TestCase
 {
 	private VehicleRegister $rsv;
-	private string $vin;
 
 	public function tearDown() {}
 	public function setUp() {
 		$this->rsv = new VehicleRegister(env('API_KEY'));
-		$this->vin = env('VIN');
 	}
 
 
 	public function testExistingVin(): void
 	{
-		$info = $this->rsv->findByVIN(
-			$this->vin
-		);
-
+		$info = $this->rsv->findByVIN(env('VIN'));
 		Assert::notNull($info);
 	}
 
 
 	public function testVinNotFound(): void
 	{
-		$info = $this->rsv->findByVIN(
-			substr($this->vin, -7)
+		Assert::exception(
+			fn() => $this->rsv->findByVIN('does not exist'),
+			VehicleNotFoundException::class,
 		);
-
-		Assert::null($info);
 	}
 }
 
