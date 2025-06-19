@@ -1,0 +1,44 @@
+{
+	"name": "juniwalk/api-rsv",
+	"description": "",
+	"type": "library",
+	"keywords": ["nette","nettefw","rsv","czech","vehicle","register","api"],
+	"license": "MIT",
+
+	"authors": [{
+		"name": "Martin Procházka",
+		"email": "juniwalk@outlook.cz",
+		"role": "Developer"
+	}],
+
+	"autoload": {
+		"psr-4": {"JuniWalk\\RSV\\": "src/"}
+	},
+
+	"minimum-stability": "dev",
+	"prefer-stable": true,
+	"config": {
+		"sort-packages": true,
+		"allow-plugins": {
+			"phpstan/extension-installer": true
+		}
+	},
+
+	"require": {
+		"php": ">=8.3",
+		"guzzlehttp/guzzle": "^7.0",
+		"juniwalk/utils": ">= 4.0",
+		"nette/schema": "^1.0"
+	},
+
+	"require-dev": {
+		"nette/di": "^3.0",
+		"nette/tester": "^2.0",
+		"phpstan/extension-installer": "^1.0",
+		"phpstan/phpstan": "^2.0",
+		"phpstan/phpstan-nette": "^2.0",
+		"staabm/phpstan-todo-by": "^0.2",
+		"tracy/tracy": "^2.0",
+		"vlucas/phpdotenv": "^5.0"
+	}
+}
