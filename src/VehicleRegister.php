@@ -11,6 +11,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use JuniWalk\RSV\Entity\Vehicle;
 use JuniWalk\RSV\Exceptions\ContentMalformedException;
+use JuniWalk\RSV\Exceptions\RateLimitedException;
 use JuniWalk\RSV\Exceptions\RequestFailedException;
 use JuniWalk\RSV\Exceptions\VehicleNotFoundException;
 
@@ -40,6 +41,7 @@ class VehicleRegister
 	/**
 	 * @param  scalar|null $vin
 	 * @throws ContentMalformedException
+	 * @throws RateLimitedException
 	 * @throws RequestFailedException
 	 * @throws VehicleNotFoundException
 	 */
@@ -57,6 +59,7 @@ class VehicleRegister
 	 * @param  array<string, mixed> $query
 	 * @return object
 	 * @throws ContentMalformedException
+	 * @throws RateLimitedException
 	 * @throws RequestFailedException
 	 * @throws VehicleNotFoundException
 	 */
@@ -83,24 +86,22 @@ class VehicleRegister
 			throw new ContentMalformedException('Response body is empty.');
 		}
 
-		if (!$json = json_decode($content)) {
+		if (!$json = json_decode($content, false)) {
 			throw new ContentMalformedException('Unable to decode JSON.');
 		}
 
-		/** @var object $json */
+		/** @var object{Status: int, Data: object, Message: string, Type: int} $json */
 
 		if (isset($json->Message)) {
-			// $json->Type === 2 // maximum request (27 in 60 seconds)
-			throw new RequestFailedException($json->Message);
+			throw match ($json->Type) {
+				2		=> new RateLimitedException($json->Message),
+				default => new RequestFailedException($json->Message),
+			};
 		}
 
-		/** @var object{Status: int, Data: object} $json */
-
 		return match ($json->Status) {
-			1 => $json->Data,
-			// 2 => ?
-			3 => throw new VehicleNotFoundException,
-
+			1		=> $json->Data,
+			3		=> throw new VehicleNotFoundException,
 			default => throw new RequestFailedException,
 		};
 	}
