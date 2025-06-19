@@ -6,3 +6,7 @@ parameters:
 
 	todo_by:
 		referenceVersion: "nextMinor"
+
+	ignoreErrors:
+		-
+			identifier: 'property.uninitializedReadonly'

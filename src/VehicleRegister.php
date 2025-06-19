@@ -10,15 +10,11 @@ namespace JuniWalk\RSV;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\RequestException;
+use JuniWalk\RSV\Entity\Vehicle;
 use RuntimeException;
 
 /**
- * @phpstan-type Vehicle object{
- * 	VIN: string,
- * 	TovarniZnacka: string,
- * 	ObchodniOznaceni: string,
- * 	VozidloKaroserieBarva: string,
- * }
+ * @link https://dataovozidlech.cz/wwwroot/data/RSV_Verejna_API_DK_v1_0.pdf
  */
 class VehicleRegister
 {
@@ -42,20 +38,25 @@ class VehicleRegister
 
 	/**
 	 * @param  scalar|null $vin
-	 * @return ?Vehicle
 	 * @throws RequestException
 	 */
-	public function findByVIN(mixed $vin = null): ?object
+	public function findByVIN(mixed $vin = null): ?Vehicle
 	{
-		return $this->request('GET', '/', [
+		$data = $this->request('GET', '/', [
 			'vin' => $vin,
 		]);
+
+		if (empty($data)) {
+			return null;
+		}
+
+		return new Vehicle((array) $data);
 	}
 
 
 	/**
 	 * @param  array<string, mixed> $query
-	 * @return ?Vehicle
+	 * @return ?object
 	 * @throws ConnectException
 	 * @throws RequestException
 	 * @throws RuntimeException
@@ -94,7 +95,7 @@ class VehicleRegister
 			throw new RuntimeException($result->Message);
 		}
 
-		/** @var object{Status: int, Data: ?Vehicle} $result */
+		/** @var object{Status: int, Data: ?object} $result */
 
 		if (!in_array($result->Status, [1, 3])) {
 			// 1 - OK, 3 - Not found
