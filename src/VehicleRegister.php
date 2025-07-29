@@ -102,6 +102,7 @@ class VehicleRegister
 		return match ($json->Status) {
 			1		=> $json->Data,
 			3		=> throw new VehicleNotFoundException,
+			4		=> throw new VehicleNotFoundException,	// ? Invalid VIN format ?
 			default => throw new RequestFailedException,
 		};
 	}
