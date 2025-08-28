@@ -47,6 +47,10 @@ class VehicleRegister
 	 */
 	public function findByVIN(mixed $vin = null): Vehicle
 	{
+		if (empty($vin)) {
+			throw new VehicleNotFoundException;
+		}
+
 		$data = $this->request('GET', '/', [
 			'vin' => $vin,
 		]);
