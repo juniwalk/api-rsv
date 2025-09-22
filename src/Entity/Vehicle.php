@@ -18,11 +18,11 @@ readonly class Vehicle
 	public DateTime $DatumPrvniRegistraceVCr;
 	public string $TovarniZnacka;
 	public string $VIN;
-	public string $ObchodniOznaceni;
+	public ?string $ObchodniOznaceni;
 	public string $Palivo;
 	public float $MotorZdvihObjem;
 	public string $VozidloKaroserieBarva;
-	public DateTime $PravidelnaTechnickaProhlidkaDo;
+	public ?DateTime $PravidelnaTechnickaProhlidkaDo;
 	public int $PocetVlastniku;
 	public int $PocetProvozovatelu;
 
